@@ -908,16 +908,15 @@ footer{border-top-color:rgba(255,255,255,.07) !important;background:#070708 !imp
         <button class="nav-tab" data-view="commands" onclick="showView('commands')">Commands</button>
         <button class="nav-tab" data-view="discover" onclick="showView('discover')">Discover</button>
         <button class="nav-tab" data-view="devs" onclick="showView('devs')">Meet the devs</button>
-        <button class="nav-tab" data-view="profile" onclick="showView('profile')">Profile</button>
         <button class="nav-tab" data-view="docs" onclick="showView('docs')">Docs</button>
         <button class="nav-tab" data-view="embed" onclick="showView('embed')">Embed</button>
       </div>
       <div class="nav-actions">
         <button class="btn btn-ghost" onclick="showView('profile')">Create your profile</button>
-        <a href="https://linktr.ee/YOUR_LINK_HERE" target="_blank" rel="noopener" class="btn btn-ghost">
+        <button class="btn btn-ghost" onclick="openLogin()">
           <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-          Links
-        </a>
+          Login
+        </button>
         <a href="https://discord.com/oauth2/authorize" target="_blank" class="btn btn-primary">Add to Discord</a>
         <button class="nav-burger" onclick="toggleMobileMenu()" aria-label="Menu">
           <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
@@ -929,11 +928,11 @@ footer{border-top-color:rgba(255,255,255,.07) !important;background:#070708 !imp
       <button class="nav-tab" data-view="commands" onclick="showView('commands')">Commands</button>
       <button class="nav-tab" data-view="discover" onclick="showView('discover')">Discover</button>
       <button class="nav-tab" data-view="devs" onclick="showView('devs')">Meet the devs</button>
-        <button class="nav-tab" data-view="profile" onclick="showView('profile')">Profile</button>
       <button class="nav-tab" data-view="docs" onclick="showView('docs')">Docs</button>
       <button class="nav-tab" data-view="embed" onclick="showView('embed')">Embed</button>
       <div class="nav-actions">
-        <button class="btn btn-ghost" onclick="openLogin()">Dashboard</button>
+        <button class="btn btn-ghost" onclick="showView('profile')">Create your profile</button>
+        <button class="btn btn-ghost" onclick="openLogin()">Login</button>
         <a href="https://discord.com/oauth2/authorize" target="_blank" class="btn btn-primary">Add to Discord</a>
       </div>
     </div>
