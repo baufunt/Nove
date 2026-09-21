@@ -908,7 +908,7 @@ footer{border-top-color:rgba(255,255,255,.07) !important;background:#070708 !imp
         <button class="nav-tab" data-view="commands" onclick="showView('commands')">Commands</button>
         <button class="nav-tab" data-view="discover" onclick="showView('discover')">Discover</button>
         <button class="nav-tab" data-view="devs" onclick="showView('devs')">Meet the devs</button>
-        <button class="nav-tab" data-view="profile" onclick="showView('profile')">Profiles</button>
+        <button class="nav-tab" data-view="profile" onclick="showView('profile')">Profile</button>
         <button class="nav-tab" data-view="docs" onclick="showView('docs')">Docs</button>
         <button class="nav-tab" data-view="embed" onclick="showView('embed')">Embed</button>
       </div>
@@ -929,7 +929,7 @@ footer{border-top-color:rgba(255,255,255,.07) !important;background:#070708 !imp
       <button class="nav-tab" data-view="commands" onclick="showView('commands')">Commands</button>
       <button class="nav-tab" data-view="discover" onclick="showView('discover')">Discover</button>
       <button class="nav-tab" data-view="devs" onclick="showView('devs')">Meet the devs</button>
-        <button class="nav-tab" data-view="profile" onclick="showView('profile')">Profiles</button>
+        <button class="nav-tab" data-view="profile" onclick="showView('profile')">Profile</button>
       <button class="nav-tab" data-view="docs" onclick="showView('docs')">Docs</button>
       <button class="nav-tab" data-view="embed" onclick="showView('embed')">Embed</button>
       <div class="nav-actions">
@@ -1625,11 +1625,11 @@ Website | https://example.com"></textarea></label>
 <script>
 /* ── CONFIG ── */
 const API_URL = 'https://justice-urologist-suspend.ngrok-free.dev';
-const DISCORD_CLIENT_ID = '1418360724631060641';
-const DISCORD_REDIRECT_URI = encodeURIComponent(window.location.origin + window.location.pathname);
-const DISCORD_SCOPES = 'identify%20guilds';
-const DISCORD_OAUTH_URL = `https://discord.com/api/oauth2/authorize?client_id=${DISCORD_CLIENT_ID}&redirect_uri=${DISCORD_REDIRECT_URI}&response_type=token&scope=${DISCORD_SCOPES}`;
+// Dashboard OAuth is handled by the backend so the Discord client secret never reaches the browser.
+// Set DISCORD_CLIENT_ID / DISCORD_CLIENT_SECRET / DISCORD_REDIRECT_URI on the backend.
 const ngrokHdr = { 'ngrok-skip-browser-warning': 'true' };
+const AUTH_URL = `${API_URL}/auth`;
+const apiFetch = (url, options={}) => fetch(url, { credentials:'include', ...options, headers:{...ngrokHdr, ...(options.headers||{})} });
 const MAX_SNAPSHOTS = 2;
 const RESTORE_STORAGE_KEY = 'Nove_restore_points';
 
@@ -1720,7 +1720,7 @@ async function loadProfile(){
   if(!activeProfileId) return;
   setText('profile-save-status','Loading...');
   try{
-    const res=await fetch(`${API_URL}/profiles/${encodeURIComponent(activeProfileId)}`,{headers:ngrokHdr});
+    const res=await apiFetch(`${API_URL}/profiles/${encodeURIComponent(activeProfileId)}`,{headers:ngrokHdr});
     if(res.status===404){
       fillProfileForm({discordId:activeProfileId,name:'',title:'',avatar:'',bio:'',links:[]});
       setText('profile-save-status','New profile — save it when ready.');
@@ -1745,7 +1745,7 @@ async function saveProfile(){
   const data=profileDataFromForm();
   setText('profile-save-status','Saving...');
   try{
-    const res=await fetch(`${API_URL}/profiles/${encodeURIComponent(activeProfileId)}`,{method:'PUT',headers:{'Content-Type':'application/json','X-Profile-Edit-Key':activeProfileEditKey,...ngrokHdr},body:JSON.stringify(data)});
+    const res=await apiFetch(`${API_URL}/profiles/${encodeURIComponent(activeProfileId)}`,{method:'PUT',headers:{'Content-Type':'application/json','X-Profile-Edit-Key':activeProfileEditKey,...ngrokHdr},body:JSON.stringify(data)});
     const out=await res.json().catch(()=>({}));
     if(!res.ok) throw new Error(out.error||'Save failed');
     if(out.editKey){ activeProfileEditKey=out.editKey; localStorage.setItem(profileEditKeyStorage(activeProfileId),out.editKey); }
@@ -1768,7 +1768,7 @@ async function loadPublicProfile(id){
   if(!target) return;
   target.innerHTML='<div class="card" style="padding:30px">Loading profile…</div>';
   try{
-    const res=await fetch(`${API_URL}/profiles/${encodeURIComponent(id)}`,{headers:ngrokHdr});
+    const res=await apiFetch(`${API_URL}/profiles/${encodeURIComponent(id)}`,{headers:ngrokHdr});
     if(res.status===404){target.innerHTML='<div class="card" style="padding:30px">This profile does not exist.</div>';return;}
     if(!res.ok) throw new Error();
     const data=await res.json();
@@ -1794,7 +1794,7 @@ function setText(id,val){ const el=document.getElementById(id); if(el) el.textCo
 
 async function fetchStats(){
   try{
-    const res = await fetch(`${API_URL}/stats`, { headers: ngrokHdr });
+    const res = await apiFetch(`${API_URL}/stats`, { headers: ngrokHdr });
     if(!res.ok) throw new Error();
     const data = await res.json();
     const gv=data.guilds||0, mv=data.members||0, ms=data.latency||0;
@@ -1831,7 +1831,7 @@ async function loadDiscover(){
   if(discoverLoaded) return;
   discoverLoaded = true;
   try{
-    const res = await fetch(`${API_URL}/guilds`, { headers: ngrokHdr });
+    const res = await apiFetch(`${API_URL}/guilds`, { headers: ngrokHdr });
     if(!res.ok) throw new Error();
     const guilds = await res.json();
     const totalMembers = guilds.reduce((a,g)=>a+g.members,0);
@@ -1876,7 +1876,7 @@ async function joinServer(guildId, btn){
   const original = btn.textContent;
   btn.disabled = true; btn.textContent = '...';
   try{
-    const res = await fetch(`${API_URL}/invite/${guildId}`, { headers: ngrokHdr });
+    const res = await apiFetch(`${API_URL}/invite/${guildId}`, { headers: ngrokHdr });
     if(!res.ok) throw new Error();
     const data = await res.json();
     if(data.url) window.open(data.url, '_blank');
@@ -2112,31 +2112,25 @@ updatePreview();
 function openLogin(){document.getElementById('login-overlay').classList.add('active');}
 function closeLogin(){document.getElementById('login-overlay').classList.remove('active');}
 document.getElementById('login-overlay').addEventListener('click',function(e){if(e.target===this)closeLogin();});
-function startDiscordOAuth(e){e.preventDefault();window.location.href=DISCORD_OAUTH_URL;}
-
-function checkOAuthCallback(){
-  const hash=window.location.hash;
-  if(!hash.includes('access_token'))return;
-  const params=new URLSearchParams(hash.slice(1));
-  const token=params.get('access_token');
-  if(!token)return;
-  history.replaceState(null,'',window.location.pathname);
-  fetchDiscordUser(token);
+function startDiscordOAuth(e){
+  e.preventDefault();
+  // The backend redirects to Discord and handles the callback securely.
+  window.location.href = `${AUTH_URL}/discord?returnTo=${encodeURIComponent(window.location.href)}`;
 }
-async function fetchDiscordUser(token){
+
+async function checkOAuthCallback(){
+  // OAuth now uses a secure HttpOnly session cookie. Restore the session on page load.
   try{
-    const [userRes,guildsRes]=await Promise.all([
-      fetch('https://discord.com/api/users/@me',{headers:{Authorization:'Bearer '+token}}),
-      fetch('https://discord.com/api/users/@me/guilds',{headers:{Authorization:'Bearer '+token}})
-    ]);
-    if(!userRes.ok)throw new Error();
-    const user=await userRes.json();
-    const guildsRaw=guildsRes.ok?await guildsRes.json():[];
-    const adminGuilds=guildsRaw.filter(g=>(parseInt(g.permissions)&0x8)===0x8);
-    sessionStorage.setItem('dc_user',JSON.stringify(user));
-    sessionStorage.setItem('dc_guilds',JSON.stringify(adminGuilds));
-    enterDashboard(user,adminGuilds);
-  }catch(err){showToast('Login failed. Please try again.','');}
+    const res = await fetch(`${AUTH_URL}/me`, { credentials:'include', headers:ngrokHdr });
+    if(!res.ok) return;
+    const data = await res.json();
+    if(data.user){
+      const adminGuilds = Array.isArray(data.guilds) ? data.guilds : [];
+      sessionStorage.setItem('dc_user', JSON.stringify(data.user));
+      sessionStorage.setItem('dc_guilds', JSON.stringify(adminGuilds));
+      enterDashboard(data.user, adminGuilds);
+    }
+  }catch(_){ /* Login remains available; API may be temporarily offline. */ }
 }
 
 /* ── DASHBOARD ── */
@@ -2227,9 +2221,9 @@ async function loadGuildConfig(guildId){
 
   try{
     const [cfgRes,chRes,rolesRes]=await Promise.all([
-      fetch(`${API_URL}/config/${guildId}`,{headers:ngrokHdr}),
-      fetch(`${API_URL}/channels/${guildId}`,{headers:ngrokHdr}),
-      fetch(`${API_URL}/roles/${guildId}`,{headers:ngrokHdr})
+      apiFetch(`${API_URL}/config/${guildId}`,{headers:ngrokHdr}),
+      apiFetch(`${API_URL}/channels/${guildId}`,{headers:ngrokHdr}),
+      apiFetch(`${API_URL}/roles/${guildId}`,{headers:ngrokHdr})
     ]);
     const cfg=cfgRes.ok?await cfgRes.json():{};
     const channels=chRes.ok?await chRes.json():[];
@@ -2284,7 +2278,7 @@ async function saveCfgSection(section){
     body.autoroleId=document.getElementById('cfg-autorole').value||null;
   }
   try{
-    const res=await fetch(`${API_URL}/config/${currentGuildId}`,{
+    const res=await apiFetch(`${API_URL}/config/${currentGuildId}`,{
       method:'PATCH',
       headers:{'Content-Type':'application/json',...ngrokHdr},
       body:JSON.stringify(body)
@@ -2323,7 +2317,7 @@ async function loadWarnings(){
   }
   document.getElementById('warn-list-container').innerHTML='<div class="page-loading"><div class="spin"></div> Loading warnings...</div>';
   try{
-    const res=await fetch(`${API_URL}/warnings/${currentGuildId}`,{headers:ngrokHdr});
+    const res=await apiFetch(`${API_URL}/warnings/${currentGuildId}`,{headers:ngrokHdr});
     if(!res.ok)throw new Error();
     allWarnings=await res.json();
     renderWarnings(allWarnings);
@@ -2381,7 +2375,7 @@ function toggleWarnCard(userId){
 async function removeWarn(userId,warnIndex){
   if(!currentGuildId)return;
   try{
-    const res=await fetch(`${API_URL}/warnings/${currentGuildId}/${userId}/${warnIndex}`,{method:'DELETE',headers:ngrokHdr});
+    const res=await apiFetch(`${API_URL}/warnings/${currentGuildId}/${userId}/${warnIndex}`,{method:'DELETE',headers:ngrokHdr});
     if(!res.ok)throw new Error();
     showToast('Warning removed','success');
     await loadWarnings();
@@ -2391,7 +2385,7 @@ async function removeWarn(userId,warnIndex){
 async function clearAllWarns(userId){
   if(!currentGuildId)return;
   try{
-    const res=await fetch(`${API_URL}/warnings/${currentGuildId}/${userId}`,{method:'DELETE',headers:ngrokHdr});
+    const res=await apiFetch(`${API_URL}/warnings/${currentGuildId}/${userId}`,{method:'DELETE',headers:ngrokHdr});
     if(!res.ok)throw new Error();
     showToast('All warnings cleared','success');
     await loadWarnings();
@@ -2513,7 +2507,7 @@ async function confirmCreateSnapshot(){
   const btn=document.getElementById('snapshot-confirm-btn');btn.disabled=true;btn.textContent='Scanning...';
   document.getElementById('snap-scanning-indicator').style.display='flex';
   let structure=null;
-  try{const res=await fetch(`${API_URL}/snapshot/${selectedRestoreGuildId}`,{headers:ngrokHdr});if(res.ok)structure=await res.json();}catch(_){}
+  try{const res=await apiFetch(`${API_URL}/snapshot/${selectedRestoreGuildId}`,{headers:ngrokHdr});if(res.ok)structure=await res.json();}catch(_){}
   if(!structure){
     structure={
       categories:[{id:'cat1',name:'Information',position:0},{id:'cat2',name:'General',position:1},{id:'cat3',name:'Voice Channels',position:2}],
@@ -2561,7 +2555,7 @@ async function executeRestore(){
   const guildId=point.guildId;
   if(!guildId){showToast('No server linked to this snapshot.','');goBtn.textContent='Restore Now';goBtn.disabled=false;closeRestoreModal();return;}
   try{
-    if(point.data){const res=await fetch(`${API_URL}/guilds/${guildId}/restore`,{method:'POST',headers:{'Content-Type':'application/json',...ngrokHdr},body:JSON.stringify(point.data)});if(!res.ok)throw new Error();}
+    if(point.data){const res=await apiFetch(`${API_URL}/guilds/${guildId}/restore`,{method:'POST',headers:{'Content-Type':'application/json',...ngrokHdr},body:JSON.stringify(point.data)});if(!res.ok)throw new Error();}
     closeRestoreModal();showToast(`Server restored to "${point.name}" successfully!`,'success');
   }catch(e){closeRestoreModal();showToast(`Restore of "${point.name}" queued (bot offline — will apply when reconnected).`,'');}
   goBtn.textContent='Restore Now';goBtn.disabled=false;
